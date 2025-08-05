@@ -48,7 +48,7 @@ for epoch in range(epochs):
             ax[ii].matshow(np.uint8(img[ii]*127.5+127.5))
             ax[ii].set_axis_off()
         plt.tight_layout(pad=0)
-        plt.savefig(f'fig_{epoch}.png')
+        plt.savefig(f'src/imgs/fig_{epoch}.png')
         plt.close()
         del img
-        generator.save('style.keras')
+        generator.save('src/models/style.keras')

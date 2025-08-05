@@ -29,7 +29,7 @@ for epoch in range(epochs):
     for batch in cars:
         g_loss, d_loss = train_step(gan,batch,opt,batch_size,epoch)
     if epoch%10 == 0:
-        print(f'{epoch} - G = {g_loss:.4f}; D = {d_loss:.4f}; Time = {((time.time()-t)/60.):.2f}')
+        print(f'{epoch} - G = {g_loss:.4f}; D = {d_loss:.4f}; Time = {((time.time()-t)):.2f} s')
 
     if epoch % 50 == 0:
         n = 5

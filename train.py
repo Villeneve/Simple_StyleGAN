@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-from .src.model import *
-from .src.dataset_loader import *
-from .src.utils import *
+from src.model import *
+from src.dataset_loader import *
+from src.utils import *
 
 
 # Models declaration

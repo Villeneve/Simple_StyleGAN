@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import os
+from tqdm import tqdm
 
 from src.model import *
 from src.dataset_loader import *

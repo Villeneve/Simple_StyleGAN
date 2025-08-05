@@ -3,10 +3,15 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+import os
 
 from src.model import *
 from src.dataset_loader import *
 from src.utils import *
+
+# Create folders
+os.mkdir('src/imgs/')
+os.mkdir('src/models/')
 
 
 # Models declaration

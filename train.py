@@ -15,3 +15,7 @@ gan = [generator, discriminator]
 
 # Dataset load
 cars = load_dataset(batch_size=64)
+
+# Optimizers
+opt = create_opt()
+

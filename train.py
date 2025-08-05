@@ -30,17 +30,18 @@ opt = create_opt()
 # Epochs
 epochs = 10000
 
+t = time.time()
 for epoch in range(epochs):
-    t = time.time()
-    for batch in cars:
+
+    for batch in tqdm(cars, desc=f"Época {epoch}/{epochs}", unit="batch"):
         g_loss, d_loss = train_step(gan,batch,opt,batch_size,epoch)
     if epoch%10 == 0:
         print(f'{epoch} - G = {g_loss:.4f}; D = {d_loss:.4f}; Time = {((time.time()-t)):.2f} s')
+        t = time.time()
 
     if epoch % 50 == 0:
         n = 5
         img = gan[0](tf.random.normal((n**2,128)),training=False)
-
         fig, ax = plt.subplots(n,n,figsize=(7,7))
         ax = ax.ravel()
         for ii in range(n**2):

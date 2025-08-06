@@ -13,6 +13,20 @@ def r1_regularization(discriminator, batch):
     return norm
 
 @tf.function
+def gradient_penalty(gan,batch):
+    shape = tf.shape(batch)[0]
+    noise = tf.random.normal((shape,128))
+    alpha = tf.random.uniform((shape,1,1,1))
+    fake_imgs = gan[0](noise,training=False)
+    interpolation = fake_imgs + alpha*(batch-fake_imgs)
+    with tf.GradientTape() as tape:
+        tape.watch(interpolation)
+        y = gan[1](interpolation)
+    grads = tape.gradient(y,[interpolation])[0]
+    norm = tf.sqrt(tf.reduce_sum(tf.square(grads),axis=[1,2,3]))
+    return tf.reduce_mean((norm-1)**2)
+
+@tf.function
 def train_step(gan,batch,opt,batch_size,count):
     g_loss = 0.
     d_loss = 0.
@@ -25,7 +39,7 @@ def train_step(gan,batch,opt,batch_size,count):
         g_loss = keras.losses.binary_crossentropy(tf.ones_like(fake_logits), fake_logits)# - 1e-4*tf.reduce_sum(tf.math.reduce_std(fake_imgs,axis=0))
         d_loss = keras.losses.binary_crossentropy(tf.ones_like(true_logis),true_logis)+keras.losses.binary_crossentropy(tf.zeros_like(fake_logits),fake_logits)
         def add_regularization():
-            return d_loss + r1_regularization(gan[1],batch)
+            return d_loss + gradient_penalty(gan,batch)
         def non_add_regularization():
             return d_loss
         d_loss = tf.cond(tf.equal(count%10,0),add_regularization,non_add_regularization)

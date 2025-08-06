@@ -12,8 +12,13 @@ from src.dataset_loader import *
 from src.utils import *
 
 # Create folders
-os.mkdir('src/imgs/')
-os.mkdir('src/models/')
+try: os.mkdir('src/imgs/')
+except:
+    print('imgs folder find')
+
+try: os.mkdir('src/models/')
+except:
+    print('models folder find')
 
 
 # Models declaration

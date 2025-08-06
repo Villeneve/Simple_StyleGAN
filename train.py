@@ -46,12 +46,8 @@ for epoch in range(epochs):
     
     for batch in tqdm(cars, desc=f"Epoch {epoch}/{epochs}", unit="batch"):
         loss = train_step(gan,batch,opt)
-        g_loss.update_state(loss[0])
-        d_loss.update_state(loss[1])
-    if epoch%10 == 0:
-        print(f'{epoch} - G = {g_loss.result():.4f}; D = {d_loss.result():.4f}; Time = {((time.time()-t)):.2f} s')
-        g_loss.reset_state()
-        d_loss.reset_state()
+    if epoch % 10 == 0:
+        print(f'{epoch} - G = {loss[0]:.4f}; D = {loss[1]:.4f}; Time = {((time.time()-t)):.2f} s')
         t = time.time()
 
     if epoch % 50 == 0:

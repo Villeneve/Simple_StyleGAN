@@ -116,11 +116,11 @@ class StyleGAN(keras.Model):
 
 def create_discriminator():
     inputs = lay.Input((32,32,3))
-    model = keras.applications.MobileNet(include_top=False,input_tensor=inputs)
+    model = keras.applications.MobileNet(include_top=False,input_tensor=inputs,weights=None)
     x = lay.Flatten()(model.output)
     x = lay.Dense(1)(x)
     discriminator = keras.Model(inputs,x)
     return discriminator
 
 def create_opt():
-    return [keras.optimizers.RMSprop(1e-4), keras.optimizers.RMSprop(1e-4)]
+    return [keras.optimizers.RMSprop(1e-4), keras.optimizers.RMSprop(2e-4)]

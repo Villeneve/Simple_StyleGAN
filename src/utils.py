@@ -27,17 +27,18 @@ def gradient_penalty(gan,batch):
     return tf.reduce_mean(tf.square(norm-1))
 
 @tf.function
-def train_step(gan,batch,opt,batch_size,count):
+def train_step(gan,batch,opt):
     g_loss = 0.
     d_loss = 0.
+    batch_size = tf.shape(batch)[0]
     latent_z = tf.random.normal((batch_size,128))
 
     with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         fake_imgs = gan[0](latent_z, trainable=True)
         true_logis = gan[1](batch,trainable=True)
         fake_logits = gan[1](fake_imgs, trainable=True)
-        g_loss = keras.losses.binary_crossentropy(tf.ones_like(fake_logits), fake_logits)# - 1e-4*tf.reduce_sum(tf.math.reduce_std(fake_imgs,axis=0))
-        d_loss = keras.losses.binary_crossentropy(tf.ones_like(true_logis),true_logis)+keras.losses.binary_crossentropy(tf.zeros_like(fake_logits),fake_logits)
+        g_loss = -tf.reduce_mean(fake_logits)
+        d_loss = -(tf.reduce_mean(true_logis) - tf.reduce_mean(fake_logits))
         d_loss += gradient_penalty(gan,batch)
 
     g_grads = g_tape.gradient(g_loss,gan[0].trainable_variables)

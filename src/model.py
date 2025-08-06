@@ -115,10 +115,11 @@ class StyleGAN(keras.Model):
         return x
 
 def create_discriminator():
-    model = keras.applications.ResNet50(include_top=False,input_shape=(32,32,3))
+    inputs = lay.Input((32,32,3))
+    model = keras.applications.MobileNet(include_top=False,input_tensor=inputs)
     x = lay.Flatten()(model.output)
-    x = lay.Dense(1,activation='sigmoid')(x)
-    discriminator = keras.Model(model.input,x)
+    x = lay.Dense(1)(x)
+    discriminator = keras.Model(inputs,x)
     return discriminator
 
 def create_opt():

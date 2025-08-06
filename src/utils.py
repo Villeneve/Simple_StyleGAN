@@ -24,7 +24,7 @@ def gradient_penalty(gan,batch):
         y = gan[1](interpolation)
     grads = tape.gradient(y,[interpolation])[0]
     norm = tf.sqrt(tf.reduce_sum(tf.square(grads),axis=[1,2,3]))
-    return tf.reduce_mean((norm-1)**2)
+    return tf.reduce_mean(tf.square(norm-1))
 
 @tf.function
 def train_step(gan,batch,opt,batch_size,count):
@@ -38,12 +38,7 @@ def train_step(gan,batch,opt,batch_size,count):
         fake_logits = gan[1](fake_imgs, trainable=True)
         g_loss = keras.losses.binary_crossentropy(tf.ones_like(fake_logits), fake_logits)# - 1e-4*tf.reduce_sum(tf.math.reduce_std(fake_imgs,axis=0))
         d_loss = keras.losses.binary_crossentropy(tf.ones_like(true_logis),true_logis)+keras.losses.binary_crossentropy(tf.zeros_like(fake_logits),fake_logits)
-        def add_regularization():
-            return d_loss + gradient_penalty(gan,batch)
-        def non_add_regularization():
-            return d_loss
-        d_loss = tf.cond(tf.equal(count%10,0),add_regularization,non_add_regularization)
-
+        d_loss += gradient_penalty(gan,batch)
 
     g_grads = g_tape.gradient(g_loss,gan[0].trainable_variables)
     opt[0].apply_gradients(zip(g_grads,gan[0].trainable_variables))

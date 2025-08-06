@@ -37,10 +37,15 @@ opt = create_opt()
 epochs = 10000
 
 t = time.time()
+
+count = tf.Variable(0,trainable=False,dtype=tf.int8)
+
 for epoch in range(epochs):
 
-    for batch in tqdm(cars, desc=f"Época {epoch}/{epochs}", unit="batch"):
-        g_loss, d_loss = train_step(gan,batch,opt,batch_size)
+    
+    for batch in tqdm(cars, desc=f"Epoch {epoch}/{epochs}", unit="batch"):
+        g_loss, d_loss = train_step(gan,batch,opt,batch_size,count)
+    count.assign_add(1)
     if epoch%10 == 0:
         print(f'{epoch} - G = {g_loss:.4f}; D = {d_loss:.4f}; Time = {((time.time()-t)):.2f} s')
         t = time.time()

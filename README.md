@@ -6,10 +6,6 @@ This repository was built as a learning exercise to understand and implement the
 
 ## 🖼️ Generated Results
 
-*(Here you can add a sample of your best-generated images after training\!)*
-
-Example:
-
 ## ✨ Key Features
 
 This model is not a full replica of the original StyleGAN paper but implements its most crucial architectural innovations:

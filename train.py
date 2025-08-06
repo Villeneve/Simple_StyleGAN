@@ -39,15 +39,19 @@ epochs = 10000
 t = time.time()
 
 count = tf.Variable(0,trainable=False,dtype=tf.int8)
+g_loss, d_loss = keras.metrics.Mean(), keras.metrics.Mean()
 
 for epoch in range(epochs):
 
     
     for batch in tqdm(cars, desc=f"Epoch {epoch}/{epochs}", unit="batch"):
-        g_loss, d_loss = train_step(gan,batch,opt)
-    count.assign_add(1)
+        loss = train_step(gan,batch,opt)
+        g_loss.update_state(loss[0])
+        d_loss.update_state(loss[1])
     if epoch%10 == 0:
-        print(f'{epoch} - G = {g_loss:.4f}; D = {d_loss:.4f}; Time = {((time.time()-t)):.2f} s')
+        print(f'{epoch} - G = {g_loss.result():.4f}; D = {d_loss.result():.4f}; Time = {((time.time()-t)):.2f} s')
+        g_loss.reset_state()
+        d_loss.reset_state()
         t = time.time()
 
     if epoch % 50 == 0:

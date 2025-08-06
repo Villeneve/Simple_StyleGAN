@@ -13,7 +13,7 @@ def r1_regularization(discriminator, batch):
     return norm
 
 @tf.function
-def train_step(gan,batch,opt,batch_size,epoch):
+def train_step(gan,batch,opt,batch_size):
     g_loss = 0.
     d_loss = 0.
     latent_z = tf.random.normal((batch_size,128))
@@ -23,8 +23,7 @@ def train_step(gan,batch,opt,batch_size,epoch):
         fake_logits = gan[1](fake_imgs, trainable=True)
         g_loss = keras.losses.binary_crossentropy(tf.ones_like(fake_logits), fake_logits)# - 1e-4*tf.reduce_sum(tf.math.reduce_std(fake_imgs,axis=0))
         d_loss = keras.losses.binary_crossentropy(tf.ones_like(true_logis),true_logis)+keras.losses.binary_crossentropy(tf.zeros_like(fake_logits),fake_logits)
-        if epoch%10 == 0:
-            d_loss += r1_regularization(gan[1],batch)
+        d_loss += r1_regularization(gan[1],batch)
 
     g_grads = g_tape.gradient(g_loss,gan[0].trainable_variables)
     opt[0].apply_gradients(zip(g_grads,gan[0].trainable_variables))

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import os
+import gc
 from tqdm import tqdm
 
 from src.model import *
@@ -52,3 +53,4 @@ for epoch in range(epochs):
         plt.close()
         del img
         generator.save('src/models/style.keras')
+        gc.collect()

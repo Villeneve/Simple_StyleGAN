@@ -1,1 +1,1 @@
-# A simple implementation of StyleGAN using Keras/Tensorflow
+# 🧠 A simple implementation of StyleGAN using Keras/Tensorflow

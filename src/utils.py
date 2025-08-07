@@ -4,12 +4,10 @@ import keras
 @tf.function
 def r1_regularization(discriminator, batch):
     with tf.GradientTape() as tape:
-        tape.watch(batch)
-        logits = discriminator(batch,training=False)
+        logits = discriminator(batch,training=True)
         logits = tf.reduce_sum(logits)
     grads = tape.gradient(logits,[batch])[0]
-    norm = tf.reduce_mean(tf.reduce_sum(tf.square(grads),axis=[1,2,3])+1e-8)
-    del grads
+    norm = tf.reduce_mean(tf.reduce_sum(tf.square(grads),axis=[1,2,3]))
     return norm
 
 @tf.function
@@ -32,13 +30,14 @@ def train_step(gan,batch,opt):
     d_loss = 0.
     batch_size = tf.shape(batch)[0]
     latent_z = tf.random.normal((batch_size,128))
+    bce = keras.losses.BinaryCrossentropy(from_logits=True)
 
     with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         fake_imgs = gan[0](latent_z, trainable=True)
         true_logis = gan[1](batch,trainable=True)
         fake_logits = gan[1](fake_imgs, trainable=True)
-        g_loss = -tf.reduce_mean(fake_logits)
-        d_loss = -(tf.reduce_mean(true_logis) - tf.reduce_mean(fake_logits)) + 10*gradient_penalty(gan,batch)
+        g_loss = bce(tf.ones_like(fake_logits),fake_logits,)
+        d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)+r1_regularization(gan[1],batch)
 
     g_grads = g_tape.gradient(g_loss,gan[0].trainable_variables)
     opt[0].apply_gradients(zip(g_grads,gan[0].trainable_variables))

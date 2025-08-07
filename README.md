@@ -7,7 +7,7 @@ This repository was built as a learning exercise to understand and implement the
 ## 🖼️ Generated Results
 
 Results with 400 epochs:
-![image][src/imgs/fig_400.png]
+![StyleGAN Result with 400 epochs](src/imgs/fig_400.png)
 
 ## ✨ Key Features
 

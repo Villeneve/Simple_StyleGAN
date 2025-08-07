@@ -4,8 +4,9 @@ import keras
 @tf.function
 def r1_regularization(discriminator, batch):
     with tf.GradientTape() as tape:
+        tape.watch(batch)
         logits = discriminator(batch,training=True)
-    grads = tape.gradient(logits,discriminator.trainable_variables)
+    grads = tape.gradient(logits,[batch])[0]
     norm = tf.reduce_mean(tf.reduce_sum(tf.square(grads),axis=[1,2,3]))
     return norm
 

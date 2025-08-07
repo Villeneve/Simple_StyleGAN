@@ -123,4 +123,4 @@ def create_discriminator():
     return discriminator
 
 def create_opt():
-    return [keras.optimizers.RMSprop(1e-4), keras.optimizers.RMSprop(2e-4)]
+    return [keras.optimizers.Adam(1e-4,.55), keras.optimizers.Adam(2e-4,.9)]

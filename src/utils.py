@@ -2,13 +2,13 @@ import tensorflow as tf
 import keras
 
 @tf.function
-def r1_regularization(discriminator, batch):
+def r1_regularization(discriminator, batch, gamma):
     with tf.GradientTape() as tape:
         tape.watch(batch)
         logits = discriminator(batch,training=True)
     grads = tape.gradient(logits,[batch])[0]
     norm = tf.reduce_mean(tf.reduce_sum(tf.square(grads),axis=[1,2,3]))
-    return norm
+    return norm*gamma/2
 
 @tf.function
 def gradient_penalty(gan,batch):
@@ -37,7 +37,7 @@ def train_step(gan,batch,opt):
         true_logis = gan[1](batch,trainable=True)
         fake_logits = gan[1](fake_imgs, trainable=True)
         g_loss = bce(tf.ones_like(fake_logits),fake_logits,)
-        d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)+r1_regularization(gan[1],batch)
+        d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)+r1_regularization(gan[1],batch,10)
 
     g_grads = g_tape.gradient(g_loss,gan[0].trainable_variables)
     opt[0].apply_gradients(zip(g_grads,gan[0].trainable_variables))

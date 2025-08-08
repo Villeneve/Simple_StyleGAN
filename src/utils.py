@@ -36,7 +36,7 @@ def train_step(gan,batch,opt):
         fake_imgs = gan[0](latent_z, trainable=True)
         true_logis = gan[1](batch,trainable=True)
         fake_logits = gan[1](fake_imgs, trainable=True)
-        g_loss = bce(tf.ones_like(fake_logits),fake_logits,)
+        g_loss = bce(tf.ones_like(fake_logits),fake_logits,)+tf.reduce_mean(tf.math.reduce_std(fake_imgs),axis=0)
         d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)+r1_regularization(gan[1],batch,10)
 
     g_grads = g_tape.gradient(g_loss,gan[0].trainable_variables)

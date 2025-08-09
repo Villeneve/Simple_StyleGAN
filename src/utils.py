@@ -25,7 +25,7 @@ def gradient_penalty(gan,batch):
     return tf.reduce_mean(tf.square(norm-1))
 
 @tf.function
-def train_step(gan,batch,opt):
+def train_step(gan,batch,opt,epoch):
     g_loss = 0.
     d_loss = 0.
     batch_size = tf.shape(batch)[0]
@@ -36,8 +36,13 @@ def train_step(gan,batch,opt):
         fake_imgs = gan[0](latent_z, trainable=True)
         true_logis = gan[1](batch,trainable=True)
         fake_logits = gan[1](fake_imgs, trainable=True)
-        g_loss = bce(tf.ones_like(fake_logits),fake_logits,)-tf.reduce_mean(tf.math.reduce_std(fake_imgs,axis=0))
-        d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)+r1_regularization(gan[1],batch,10)
+        g_loss = bce(tf.ones_like(fake_logits),fake_logits,)-tf.reduce_mean(tf.math.reduce_std(fake_imgs,axis=[0,-1]))
+        d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)
+        def isTrue():
+            return d_loss + r1_regularization(gan[1],batch,10)
+        def isFalse():
+            return d_loss
+        d_loss = tf.cond(tf.equal(epoch%10,0),isTrue,isFalse)
 
     g_grads = g_tape.gradient(g_loss,gan[0].trainable_variables)
     opt[0].apply_gradients(zip(g_grads,gan[0].trainable_variables))

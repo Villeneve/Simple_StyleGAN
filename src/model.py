@@ -116,10 +116,8 @@ class StyleGAN(keras.Model):
 
 def create_discriminator():
     inputs = lay.Input((32,32,3))
-    model = keras.applications.VGG19(include_top=False,input_tensor=inputs,weights=None)
+    model = keras.applications.VGG16(include_top=False,input_tensor=inputs,weights=None)
     x = lay.Flatten()(model.output)
-    x = lay.Dropout(.3)(x)
-    x = lay.Dense(256,activation='elu')(x)
     x = lay.Dropout(.3)(x)
     x = lay.Dense(1)(x)
     discriminator = keras.Model(inputs,x)

@@ -42,7 +42,7 @@ def train_step(gan,batch,opt,epoch):
             return d_loss + r1_regularization(gan[1],batch,10)
         def isFalse():
             return d_loss
-        d_loss = tf.cond(tf.equal(epoch%2,0),isTrue,isFalse)
+        d_loss = tf.cond(tf.equal(epoch%8,0),isTrue,isFalse)
 
     g_grads = g_tape.gradient(g_loss,gan[0].trainable_variables)
     opt[0].apply_gradients(zip(g_grads,gan[0].trainable_variables))

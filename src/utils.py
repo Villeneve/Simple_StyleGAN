@@ -29,8 +29,8 @@ def train_step(gan,batch,opt,epoch):
     g_loss = 0.
     d_loss = 0.
     batch_size = tf.shape(batch)[0]
-    latent_z = tf.random.normal((batch_size,128))
-    bce = keras.losses.BinaryCrossentropy(from_logits=True)
+    latent_z = tf.random.normal((batch_size,512))
+    bce = keras.losses.BinaryCrossentropy()
 
     with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         fake_imgs = gan[0](latent_z, trainable=True)
@@ -42,7 +42,7 @@ def train_step(gan,batch,opt,epoch):
             return d_loss + r1_regularization(gan[1],batch,10)
         def isFalse():
             return d_loss
-        d_loss = tf.cond(tf.equal(epoch%10,0),isTrue,isFalse)
+        d_loss = tf.cond(tf.equal(epoch%2,0),isTrue,isFalse)
 
     g_grads = g_tape.gradient(g_loss,gan[0].trainable_variables)
     opt[0].apply_gradients(zip(g_grads,gan[0].trainable_variables))

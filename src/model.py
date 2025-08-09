@@ -27,8 +27,8 @@ class StyleGAN(keras.Model):
     
         # Neurônios de conversão de z para w
         self.mapping_network = keras.Sequential([
-            lay.InputLayer(shape=(128,)),
-            *[lay.Dense(128,activation='leaky_relu') for i in range(7)]
+            lay.InputLayer(shape=(512,)),
+            *[lay.Dense(256,activation='leaky_relu') for i in range(8)]
             ],name='mapping_network')
 
         # Mapa inicial
@@ -116,10 +116,10 @@ class StyleGAN(keras.Model):
 
 def create_discriminator():
     inputs = lay.Input((32,32,3))
-    model = keras.applications.VGG16(include_top=False,input_tensor=inputs,weights=None)
+    model = keras.applications.ResNet50(include_top=False,input_tensor=inputs,weights=None)
     x = lay.Flatten()(model.output)
     x = lay.Dropout(.3)(x)
-    x = lay.Dense(1)(x)
+    x = lay.Dense(1,activation='sigmoid')(x)
     discriminator = keras.Model(inputs,x)
     return discriminator
 

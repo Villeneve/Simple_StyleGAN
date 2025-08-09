@@ -38,24 +38,27 @@ epochs = 10000
 
 t = time.time()
 
-count = tf.Variable(0,trainable=False,dtype=tf.int8)
-g_loss, d_loss = keras.metrics.Mean(), keras.metrics.Mean()
-
+# Tensor for epochs counter (DO NOT USE A PYTHON VARIABLE!)
 count = tf.Variable(0,trainable=False)
 
 for epoch in range(epochs):
 
-    
+    # Loop for all batchs
     for batch in tqdm(cars, desc=f"Epoch {epoch}/{epochs}", unit="batch"):
         loss = train_step(gan,batch,opt,count)
+
+    # Tensor epochs counter increment
     count.assign_add(1)
+
+    # Print loss
     if epoch % 10 == 0:
         print(f'{epoch} - G = {loss[0]:.4f}; D = {loss[1]:.4f}; Time = {((time.time()-t)):.2f} s')
         t = time.time()
 
+    # Plot 10x10 images each 50 epochs
     if epoch % 50 == 0:
         n = 10
-        img = gan[0](tf.random.normal((n**2,128)),training=False)
+        img = gan[0](tf.random.normal((n**2,512)),training=False)
         fig, ax = plt.subplots(n,n,figsize=(7,7))
         ax = ax.ravel()
         for ii in range(n**2):

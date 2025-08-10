@@ -28,7 +28,7 @@ gan = [generator, discriminator]
 
 # Dataset load
 batch_size = 64
-cars = load_dataset(batch_size)
+cats = load_dataset(batch_size)
 
 # Optimizers
 opt = create_opt()
@@ -38,21 +38,22 @@ epochs = 10000
 
 t = time.time()
 
-# Tensor for epochs counter (DO NOT USE A PYTHON VARIABLE!)
-count = tf.Variable(0,trainable=False)
+# Meadian for loss metric
+d_loss, g_loss = keras.metrics.Mean(), keras.metrics.Mean()
 
 for epoch in range(epochs):
 
     # Loop for all batchs
-    for i,batch in enumerate(tqdm(cars, desc=f"Epoch {epoch}/{epochs}", unit="batch")):
+    for i,batch in enumerate(tqdm(cats, desc=f"Epoch {epoch}/{epochs}", unit="batch")):
         loss = train_step(gan,batch,opt,i%16==0)
-
-    # Tensor epochs counter increment
-    count.assign_add(1)
+        g_loss.update_state(loss[0])
+        d_loss.update_state(loss[1])
 
     # Print loss
     if epoch % 10 == 0:
-        print(f'{epoch} - G = {loss[0]:.4f}; D = {loss[1]:.4f}; Time = {((time.time()-t)):.2f} s')
+        print(f'{epoch} - G = {g_loss.result():.4f}; D = {d_loss.result():.4f}; Time = {((time.time()-t)):.2f} s')
+        d_loss.reset_state()
+        g_loss.reset_state()
         t = time.time()
 
     # Plot 10x10 images each 50 epochs

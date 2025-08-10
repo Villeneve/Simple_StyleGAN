@@ -114,16 +114,44 @@ class StyleGAN(keras.Model):
         x = self.conv2d[-1](x)
 
         return x
+    
+class MiniBatchSTD(lay.Layer):
+    def __init__(self, *, activity_regularizer=None, trainable=True, dtype=None, autocast=True, name=None, **kwargs):
+        super().__init__(activity_regularizer=activity_regularizer, trainable=trainable, dtype=dtype, autocast=autocast, name=name, **kwargs)
+
+    def call(self, inputs, *args, **kwargs):
+        stddev = tf.math.reduce_mean(inputs,axis=0,keepdims=True)
+        mean = tf.reduce_mean(stddev,keepdims=True)
+        shape_inputs = tf.shape(inputs)
+        batch_size = shape_inputs[0]
+        H = shape_inputs[1]
+        W = shape_inputs[2]
+        miniBatch_map = tf.tile(mean,(batch_size,H,W,1))
+        return tf.concat([inputs,miniBatch_map],axis=-1)
 
 def create_discriminator():
+    vgg = keras.applications.VGG19(include_top=False,input_shape=(32,32,3),weights=None)
+
     inputs = lay.Input((32,32,3))
-    model = keras.applications.VGG19(include_top=False,input_tensor=inputs,weights=None)
-    x = lay.Flatten()(model.output)
-    x = lay.Dropout(.3)(x)
-    x = lay.Dense(1,activation='sigmoid')(x)
-    discriminator = keras.Model(inputs,x)
-    # discriminator = apply_spectral_normalization_to_model(discriminator)
-    return discriminator
+
+    skip_conection = inputs
+    x = skip_conection
+
+    for layer in vgg.layers[1:-2]:
+        config = layer.get_config()
+        new_layer = layer.__class__.from_config(config)
+        if isinstance(new_layer,lay.MaxPooling2D):
+            x = lay.Add()([x,lay.Conv2D(x.shape[-1],1,1,'same')(skip_conection)])
+            x = lay.AveragePooling2D((2,2))(x)
+            skip_conection = x
+        else:
+            x = new_layer(x)
+    x = MiniBatchSTD()(x)
+    x = lay.Flatten()(x)
+    x = lay.Dense(1)(x)
+
+    VGG19 = keras.Model(inputs,x)
+    return VGG19
 
 def create_opt():
     return [keras.optimizers.Adam(1e-4,0.0,.99), keras.optimizers.Adam(1e-4,0.0,.99)]

@@ -25,7 +25,7 @@ def gradient_penalty(gan,batch):
     norm = tf.sqrt(tf.reduce_sum(tf.square(grads),axis=[1,2,3])+1e-8)
     return tf.reduce_mean(tf.square(norm-1))
 
-bce = keras.losses.BinaryCrossentropy()
+bce = keras.losses.BinaryCrossentropy(from_logits=True)
 
 @tf.function
 def train_step(gan,batch,opt,epoch):
@@ -39,7 +39,7 @@ def train_step(gan,batch,opt,epoch):
         fake_imgs = gan[0](latent_z, training=True)
         true_logis = gan[1](batch,training=True)
         fake_logits = gan[1](fake_imgs, training=True)
-        g_loss = bce(tf.ones_like(fake_logits),fake_logits)-3*tf.reduce_mean(tf.math.reduce_std(fake_imgs,axis=[0]))
+        g_loss = bce(tf.ones_like(fake_logits),fake_logits)#-tf.reduce_mean(tf.math.reduce_std(fake_imgs,axis=[0]))
         d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)
         def isTrue():
             reg = r1_regularization(gan[1],batch,10)

@@ -1,5 +1,6 @@
 import tensorflow as tf
 import keras
+import keras.layers as lay
 
 @tf.function
 def r1_regularization(discriminator, batch, gamma):
@@ -24,31 +25,33 @@ def gradient_penalty(gan,batch):
     norm = tf.sqrt(tf.reduce_sum(tf.square(grads),axis=[1,2,3])+1e-8)
     return tf.reduce_mean(tf.square(norm-1))
 
+bce = keras.losses.BinaryCrossentropy()
+
 @tf.function
 def train_step(gan,batch,opt,epoch):
     g_loss = 0.
     d_loss = 0.
     batch_size = tf.shape(batch)[0]
     latent_z = tf.random.normal((batch_size,512))
-    bce = keras.losses.BinaryCrossentropy()
+    
 
     with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
-        fake_imgs = gan[0](latent_z, trainable=True)
-        true_logis = gan[1](batch,trainable=True)
-        fake_logits = gan[1](fake_imgs, trainable=True)
-        g_loss = bce(tf.ones_like(fake_logits),fake_logits,)-tf.reduce_mean(tf.math.reduce_std(fake_imgs,axis=[0,-1]))
+        fake_imgs = gan[0](latent_z, training=True)
+        true_logis = gan[1](batch,training=True)
+        fake_logits = gan[1](fake_imgs, training=True)
+        g_loss = bce(tf.ones_like(fake_logits),fake_logits)-tf.reduce_mean(tf.math.reduce_std(fake_imgs,axis=[0]))
         d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)
         def isTrue():
-            return d_loss + r1_regularization(gan[1],batch,10)
+            reg = r1_regularization(gan[1],batch,10)
+            return reg
         def isFalse():
-            return d_loss
-        d_loss = tf.cond(tf.equal(epoch%8,0),isTrue,isFalse)
+            return 0.
+        d_loss += tf.cond(tf.equal(epoch,True),isTrue,isFalse)
 
     g_grads = g_tape.gradient(g_loss,gan[0].trainable_variables)
     opt[0].apply_gradients(zip(g_grads,gan[0].trainable_variables))
 
     d_grads = d_tape.gradient(d_loss,gan[1].trainable_variables)
     opt[1].apply_gradients(zip(d_grads,gan[1].trainable_variables))
-    
-    return tf.reduce_mean(g_loss), tf.reduce_mean(d_loss)
 
+    return g_loss, d_loss

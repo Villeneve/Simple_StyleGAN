@@ -44,8 +44,8 @@ count = tf.Variable(0,trainable=False)
 for epoch in range(epochs):
 
     # Loop for all batchs
-    for batch in tqdm(cars, desc=f"Epoch {epoch}/{epochs}", unit="batch"):
-        loss = train_step(gan,batch,opt,count)
+    for i,batch in enumerate(tqdm(cars, desc=f"Epoch {epoch}/{epochs}", unit="batch")):
+        loss = train_step(gan,batch,opt,i%16==0)
 
     # Tensor epochs counter increment
     count.assign_add(1)
@@ -67,6 +67,4 @@ for epoch in range(epochs):
         plt.tight_layout(pad=0)
         plt.savefig(f'src/imgs/fig_{epoch}.png')
         plt.close()
-        del img
         generator.save('src/models/style.keras')
-        gc.collect()

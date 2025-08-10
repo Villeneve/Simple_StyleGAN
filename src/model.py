@@ -1,6 +1,7 @@
 import keras
 import keras.layers as lay
 import tensorflow as tf
+# from src.utils import apply_spectral_normalization_to_model
 
 @keras.saving.register_keras_serializable()
 class AdaIN(lay.Layer):
@@ -116,12 +117,12 @@ class StyleGAN(keras.Model):
 
 def create_discriminator():
     inputs = lay.Input((32,32,3))
-    model = keras.applications.VGG16(include_top=False,input_tensor=inputs,weights=None)
+    model = keras.applications.VGG19(include_top=False,input_tensor=inputs,weights=None)
     x = lay.Flatten()(model.output)
-    x = lay.Dropout(.4)(x)
     x = lay.Dense(1,activation='sigmoid')(x)
     discriminator = keras.Model(inputs,x)
+    # discriminator = apply_spectral_normalization_to_model(discriminator)
     return discriminator
 
 def create_opt():
-    return [keras.optimizers.Adam(1e-4,0.0,.99), keras.optimizers.Adam(2e-4,0.0,.99)]
+    return [keras.optimizers.Adam(1e-4,0.0,.99), keras.optimizers.Adam(1e-4,0.0,.99)]

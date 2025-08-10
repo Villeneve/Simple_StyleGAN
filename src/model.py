@@ -119,6 +119,7 @@ def create_discriminator():
     inputs = lay.Input((32,32,3))
     model = keras.applications.VGG19(include_top=False,input_tensor=inputs,weights=None)
     x = lay.Flatten()(model.output)
+    x = lay.Dropout(.3)(x)
     x = lay.Dense(1,activation='sigmoid')(x)
     discriminator = keras.Model(inputs,x)
     # discriminator = apply_spectral_normalization_to_model(discriminator)

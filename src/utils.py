@@ -14,7 +14,7 @@ def r1_regularization(discriminator, batch, gamma):
 @tf.function
 def gradient_penalty(gan,batch):
     shape = tf.shape(batch)[0]
-    noise = tf.random.normal((shape,128))
+    noise = tf.random.normal((shape,512))
     alpha = tf.random.uniform((shape,1,1,1))
     fake_imgs = gan[0](noise,training=False)
     interpolation = fake_imgs + alpha*(batch-fake_imgs)
@@ -41,8 +41,10 @@ def train_step(gan,batch,opt,epoch):
         fake_logits = gan[1](fake_imgs, training=True)
         g_loss = bce(tf.ones_like(fake_logits),fake_logits)#-tf.reduce_mean(tf.math.reduce_std(fake_imgs,axis=[0]))
         d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)
+        # g_loss = -(tf.reduce_mean(fake_logits))
+        # d_loss = -(tf.reduce_mean(true_logis)-tf.reduce_mean(fake_logits))
         def isTrue():
-            reg = r1_regularization(gan[1],batch,10)
+            reg = r1_regularization(gan[1],batch,10)# + gradient_penalty(gan,batch)
             return reg
         def isFalse():
             return 0.

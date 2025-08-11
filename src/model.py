@@ -17,8 +17,8 @@ class AdaIN(lay.Layer):
         bias = self.dense_bias(style_w)
         gamma = tf.reshape(gamma,(-1,1,1,self.channels))
         bias = tf.reshape(bias,(-1,1,1,self.channels))
-        mean, variance = tf.nn.moments(features_map,(1,2),keepdims=True)
-        normalized = tf.nn.batch_normalization(features_map,mean,variance,bias,gamma,1e-6)
+        mean, variance = tf.nn.moments(features_map,axes=[1,2],keepdims=True)
+        normalized = tf.nn.batch_normalization(features_map,mean,variance,scale=gamma,offset=bias,variance_epsilon=1e-9)
         return normalized
     
 @keras.saving.register_keras_serializable()
@@ -29,7 +29,7 @@ class StyleGAN(keras.Model):
         # Neurônios de conversão de z para w
         self.mapping_network = keras.Sequential([
             lay.InputLayer(shape=(512,)),
-            *[lay.Dense(256,activation='leaky_relu') for i in range(8)]
+            *[lay.Dense(512,activation='leaky_relu') for i in range(8)]
             ],name='mapping_network')
 
         # Mapa inicial
@@ -82,6 +82,7 @@ class StyleGAN(keras.Model):
 
         batch_size = z.shape[0]
         w = self.mapping_network(z)
+
         initial_map = tf.tile(self.latent_map,(batch_size,1,1,1))
 
         # Bloco do 4x4
@@ -148,6 +149,7 @@ def create_discriminator():
             x = new_layer(x)
     x = MiniBatchSTD()(x)
     x = lay.Flatten()(x)
+    # x = lay.Dropout(.3)(x)
     x = lay.Dense(1)(x)
 
     VGG19 = keras.Model(inputs,x)

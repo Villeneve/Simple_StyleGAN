@@ -1,5 +1,6 @@
 import keras
 import tensorflow as tf
+import tensorflow_datasets as tfds
 import matplotlib.pyplot as plt
 import numpy as np
 import time
@@ -28,7 +29,12 @@ gan = [generator, discriminator]
 
 # Dataset load
 batch_size = 64
-cats = load_dataset(batch_size)
+data = keras.preprocessing.image_dataset_from_directory(
+    'dataset/cars',
+    image_size=(32,32),
+    labels=None,
+    
+).unbatch().map(lambda x: (tf.cast(x,tf.float32)-127.5)/127.5).shuffle(1000).batch(batch_size,drop_remainder=True).prefetch(tf.data.AUTOTUNE)
 
 # Optimizers
 opt = create_opt()
@@ -44,7 +50,7 @@ d_loss, g_loss = keras.metrics.Mean(), keras.metrics.Mean()
 for epoch in range(epochs):
 
     # Loop for all batchs
-    for i,batch in enumerate(tqdm(cats, desc=f"Epoch {epoch}/{epochs}", unit="batch")):
+    for i,batch in enumerate(tqdm(data, desc=f"Epoch {epoch}/{epochs}", unit="batch")):
         loss = train_step(gan,batch,opt,i%16==0)
         g_loss.update_state(loss[0])
         d_loss.update_state(loss[1])

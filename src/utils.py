@@ -14,7 +14,7 @@ def r1_regularization(discriminator, batch, gamma):
 @tf.function
 def gradient_penalty(gan,batch):
     shape = tf.shape(batch)[0]
-    noise = tf.random.normal((shape,512))
+    noise = tf.random.normal((shape,128))
     alpha = tf.random.uniform((shape,1,1,1))
     fake_imgs = gan[0](noise,training=False)
     interpolation = fake_imgs + alpha*(batch-fake_imgs)
@@ -32,17 +32,22 @@ def train_step(gan,batch,opt,epoch):
     g_loss = 0.
     d_loss = 0.
     batch_size = tf.shape(batch)[0]
-    latent_z = tf.random.normal((batch_size,512))
     
 
-    with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
+    with tf.GradientTape() as g_tape:
+        latent_z = tf.random.normal((batch_size*2,256))
+        fake_imgs = gan[0](latent_z, training=True)
+        fake_logits = gan[1](fake_imgs, training=True)
+        g_loss = bce(tf.ones_like(fake_logits),fake_logits)
+        
+        
+        
+    with tf.GradientTape() as d_tape:
+        latent_z = tf.random.normal((batch_size,256))
         fake_imgs = gan[0](latent_z, training=True)
         true_logis = gan[1](batch,training=True)
         fake_logits = gan[1](fake_imgs, training=True)
-        g_loss = bce(tf.ones_like(fake_logits),fake_logits)#-tf.reduce_mean(tf.math.reduce_std(fake_imgs,axis=[0]))
         d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)
-        # g_loss = -(tf.reduce_mean(fake_logits))
-        # d_loss = -(tf.reduce_mean(true_logis)-tf.reduce_mean(fake_logits))
         def isTrue():
             reg = r1_regularization(gan[1],batch,10)# + gradient_penalty(gan,batch)
             return reg

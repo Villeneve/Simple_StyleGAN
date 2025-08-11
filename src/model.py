@@ -28,8 +28,8 @@ class StyleGAN(keras.Model):
     
         # Neurônios de conversão de z para w
         self.mapping_network = keras.Sequential([
-            lay.InputLayer(shape=(512,)),
-            *[lay.Dense(512,activation='leaky_relu') for i in range(8)]
+            lay.InputLayer(shape=(256,)),
+            *[lay.Dense(256,activation='leaky_relu') for i in range(8)]
             ],name='mapping_network')
 
         # Mapa inicial
@@ -131,7 +131,7 @@ class MiniBatchSTD(lay.Layer):
         return tf.concat([inputs,miniBatch_map],axis=-1)
 
 def create_discriminator():
-    vgg = keras.applications.VGG19(include_top=False,input_shape=(32,32,3),weights=None)
+    vgg = keras.applications.VGG16(include_top=False,input_shape=(32,32,3),weights=None)
 
     inputs = lay.Input((32,32,3))
 
@@ -142,8 +142,10 @@ def create_discriminator():
         config = layer.get_config()
         new_layer = layer.__class__.from_config(config)
         if isinstance(new_layer,lay.MaxPooling2D):
-            x = lay.Add()([x,lay.Conv2D(x.shape[-1],1,1,'same')(skip_conection)])
+            # conv_skip = lay.Conv2D(x.shape[-1],1,1,'same',activation='leaky_relu')(skip_conection)
+            # x = lay.Add()([x,conv_skip])
             x = lay.AveragePooling2D((2,2))(x)
+            # x = lay.Dropout(.3)(x)
             skip_conection = x
         else:
             x = new_layer(x)
@@ -156,4 +158,4 @@ def create_discriminator():
     return VGG19
 
 def create_opt():
-    return [keras.optimizers.Adam(1e-4,0.0,.99), keras.optimizers.Adam(1e-4,0.0,.99)]
+    return [keras.optimizers.Adam(1e-4,0.0,.999), keras.optimizers.Adam(1e-4,0.0,.999)]

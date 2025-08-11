@@ -33,8 +33,9 @@ data = keras.preprocessing.image_dataset_from_directory(
     'dataset/cars',
     image_size=(32,32),
     labels=None,
-    
-).unbatch().map(lambda x: (tf.cast(x,tf.float32)-127.5)/127.5).shuffle(1000).batch(batch_size,drop_remainder=True).prefetch(tf.data.AUTOTUNE)
+
+).unbatch()
+data = data.map(lambda x: (tf.cast(x,tf.float32)-127.5)/127.5).cache().shuffle(1000).batch(batch_size,drop_remainder=True).prefetch(tf.data.AUTOTUNE)
 
 # Optimizers
 opt = create_opt()
@@ -51,7 +52,7 @@ for epoch in range(epochs):
 
     # Loop for all batchs
     for i,batch in enumerate(tqdm(data, desc=f"Epoch {epoch}/{epochs}", unit="batch")):
-        loss = train_step(gan,batch,opt,i%16==0)
+        loss = train_step(gan,batch,opt,i%10==0)
         g_loss.update_state(loss[0])
         d_loss.update_state(loss[1])
 
@@ -65,7 +66,7 @@ for epoch in range(epochs):
     # Plot 10x10 images each 50 epochs
     if epoch % 50 == 0:
         n = 10
-        img = gan[0](tf.random.normal((n**2,512)),training=False)
+        img = gan[0](tf.random.normal((n**2,256)),training=False)
         fig, ax = plt.subplots(n,n,figsize=(7,7))
         ax = ax.ravel()
         for ii in range(n**2):

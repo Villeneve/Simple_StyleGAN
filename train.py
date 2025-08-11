@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import os
-import gc
+# import gc
 from tqdm import tqdm
 
 from src.model import *
@@ -29,39 +29,48 @@ gan = [generator, discriminator]
 
 # Dataset load
 batch_size = 64
-data = keras.preprocessing.image_dataset_from_directory(
-    'dataset/cars',
-    image_size=(32,32),
-    labels=None,
-
-).unbatch()
-data = data.map(lambda x: (tf.cast(x,tf.float32)-127.5)/127.5).cache().shuffle(1000).batch(batch_size,drop_remainder=True).prefetch(tf.data.AUTOTUNE)
+(x,y),(_,_) = keras.datasets.cifar10.load_data()
+x = x[y[:,0] == 1]
+dataset = tf.data.Dataset.from_tensor_slices((x)).map(lambda x: (tf.cast(x,tf.float32)-127.5)/127.5).cache().shuffle(1000).batch(batch_size,drop_remainder=True).prefetch(tf.data.AUTOTUNE)
 
 # Optimizers
 opt = create_opt()
 
 # Epochs
-epochs = 10000
+epochs = 999
 
 t = time.time()
 
 # Meadian for loss metric
-d_loss, g_loss = keras.metrics.Mean(), keras.metrics.Mean()
+g_loss, dl_1, dl_2  = [keras.metrics.Mean() for i in range(3)]
+g_array_loss = []
+d_array_loss = []
 
 for epoch in range(epochs):
 
     # Loop for all batchs
-    for i,batch in enumerate(tqdm(data, desc=f"Epoch {epoch}/{epochs}", unit="batch")):
+    for i,batch in enumerate(tqdm(dataset, desc=f"Epoch {epoch}/{epochs}", unit="batch")):
         loss = train_step(gan,batch,opt,i%10==0)
         g_loss.update_state(loss[0])
-        d_loss.update_state(loss[1])
+        dl_1.update_state(loss[1])
+        dl_2.update_state(loss[2])
+    
+    g_array_loss.append(g_loss.result())
+    d_array_loss.append((dl_1.result()+dl_2.result())/2)
+
+    g_loss.reset_state()
+    dl_1.reset_state()
+    dl_2.reset_state()
 
     # Print loss
     if epoch % 10 == 0:
-        print(f'{epoch} - G = {g_loss.result():.4f}; D = {d_loss.result():.4f}; Time = {((time.time()-t)):.2f} s')
-        d_loss.reset_state()
-        g_loss.reset_state()
-        t = time.time()
+
+        plt.plot(g_array_loss,label='G_loss')
+        plt.plot(d_array_loss,label='D_loss')
+        plt.legend()
+        plt.savefig('loss.jpg')
+        plt.close()
+    
 
     # Plot 10x10 images each 50 epochs
     if epoch % 50 == 0:

@@ -31,13 +31,15 @@ bce = keras.losses.BinaryCrossentropy(from_logits=True)
 def train_step(gan,batch,opt,epoch):
     g_loss = 0.
     d_loss = 0.
+    dl_1 = 0.
+    dl_2 = 0.
     batch_size = tf.shape(batch)[0]
     
 
     with tf.GradientTape() as g_tape:
         latent_z = tf.random.normal((batch_size*2,256))
         fake_imgs = gan[0](latent_z, training=True)
-        fake_logits = gan[1](fake_imgs, training=True)
+        fake_logits = gan[1](fake_imgs, training=False)
         g_loss = bce(tf.ones_like(fake_logits),fake_logits)
         
         
@@ -47,7 +49,9 @@ def train_step(gan,batch,opt,epoch):
         fake_imgs = gan[0](latent_z, training=True)
         true_logis = gan[1](batch,training=True)
         fake_logits = gan[1](fake_imgs, training=True)
-        d_loss = bce(tf.ones_like(true_logis),true_logis)+bce(tf.zeros_like(fake_logits),fake_logits)
+        dl_1 = bce(tf.ones_like(true_logis)*tf.random.uniform(true_logis.shape,0.9,0.95),true_logis)
+        dl_2 = bce(tf.zeros_like(fake_logits)+tf.random.uniform(fake_logits.shape,0.05,0.15),fake_logits)
+        d_loss = (dl_1 + dl_2)/2.
         def isTrue():
             reg = r1_regularization(gan[1],batch,10)# + gradient_penalty(gan,batch)
             return reg
@@ -61,4 +65,4 @@ def train_step(gan,batch,opt,epoch):
     d_grads = d_tape.gradient(d_loss,gan[1].trainable_variables)
     opt[1].apply_gradients(zip(d_grads,gan[1].trainable_variables))
 
-    return g_loss, d_loss
+    return g_loss, dl_1, dl_2

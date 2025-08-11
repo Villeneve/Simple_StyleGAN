@@ -47,7 +47,7 @@ class StyleGAN(keras.Model):
             lay.Conv2D(128,3,1,'same',activation='leaky_relu'),
             lay.Conv2D(64,3,1,'same',activation='leaky_relu'),
             lay.Conv2D(64,3,1,'same',activation='leaky_relu'),
-            lay.Conv2D(3,1,1,'same',activation='tanh',name='toRGB')
+            lay.Conv2D(3,3,1,'same',activation='tanh',name='toRGB')
         ]
         
         # Escaladores de ruído
